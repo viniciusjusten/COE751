@@ -2,7 +2,8 @@ function newton_raphson(
     F,
     dF,
     x0,
-    y; tol = 1e-8,
+    y;
+    tol = 1e-8,
     max_iter = 1000,
     digits = 6,
     log_path = "",
