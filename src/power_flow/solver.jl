@@ -7,12 +7,15 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
 
     n_buses = length(power_flow_case.buses)
     n_qg_vc = num_controlled_voltages_by_reactive_power(power_flow_case)
+    n_tap_vc = num_controlled_voltages_by_tap(power_flow_case)
     Ybus = admittance_matrix(power_flow_case)
     
     # initialize voltage magnitudes and angles
     v = initialize_voltage_magnitude(power_flow_case)
     a = initialize_voltage_angle(power_flow_case)
     qg_vc = initialize_reactive_power_that_controls_voltage(power_flow_case)
+    tap_vc = initialize_tap_transformer_control(power_flow_case)
+    previous_tap = zeros(n_tap_vc)
 
     # helper vectors to store bus type indices
     slack_indices = findall(bus -> bus_is_slack(bus), power_flow_case.buses)
@@ -27,6 +30,16 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
 
     for iter in 1:max_iterations
         println(log, "Iteration $iter")
+
+        if iter > 1 && !isempty(tap_vc)
+            # update tap ratios in Ybus based on current tap_vc values
+            Ybus = update_tap_transformer_admittances(
+                Ybus,
+                power_flow_case,
+                previous_tap,
+                tap_vc,
+            )
+        end
 
         # specified power injection
         Pesp, Qesp = specified_power_injection(power_flow_case)
@@ -45,8 +58,15 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         Q_mismatch[pv_indices] .= 0.0
         ## reactive power that controls voltage
         Qg_vc_mismatch = reactive_power_control_mismatch(power_flow_case, Qcalc, qg_vc)
+        for (i, vbcq) in enumerate(power_flow_case.caches.voltage_controlled_by_reactive_power)
+            controlling_bus_index = vbcq.controlling_bus_index
+            Q_mismatch[controlling_bus_index] += Qg_vc_mismatch[i]
+        end
+        vc_qg_mismatch = voltage_controlled_by_reactive_power_mismatch(power_flow_case, v)
+        ## tap transformer control
+        vc_tap_mismatch = voltage_controlled_by_tap_mismatch(power_flow_case, v)
         ## total mismatch vector
-        mismatch = vcat(P_mismatch, Q_mismatch, Qg_vc_mismatch)
+        mismatch = vcat(P_mismatch, Q_mismatch, vc_qg_mismatch, vc_tap_mismatch)
         println(log, "  Mismatch: $mismatch")
 
         # check for convergence
@@ -62,10 +82,14 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
             Ybus,
             Scalc,
             v,
-            a,
+            a;
             reactive_power_voltage_control = qg_vc,
+            tap_transformer_control = tap_vc,
         )
         println(log, "  Jacobian: $J")
+
+        # store previous tap ratios for the next iteration's Ybus update
+        previous_tap .= deepcopy(tap_vc)
 
         # update voltage magnitudes and angles
         update = SparseArrays.sparse(J) \ mismatch
@@ -73,6 +97,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         a[angle_indices] += update[angle_indices]
         v[voltage_indices] += update[n_buses .+ voltage_indices]
         qg_vc += update[2 * n_buses .+ (1:n_qg_vc)]
+        tap_vc += update[2 * n_buses + n_qg_vc .+ (1:n_tap_vc)]
     end
     
     println(log, stdout, "[ERROR] Power flow did not converge within $max_iterations iterations.")

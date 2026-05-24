@@ -5,6 +5,7 @@ using SparseArrays
 
 include("power_flow/collections.jl")
 include("power_flow/remote_voltage_control/reactive_injection.jl")
+include("power_flow/remote_voltage_control/tap_transformer.jl")
 include("power_flow/utils.jl")
 include("power_flow/solver.jl")
 include("utils.jl")

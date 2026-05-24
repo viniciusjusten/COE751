@@ -36,6 +36,7 @@ function jacobian(
     voltage_magnitudes::Vector{Float64},
     voltage_angles::Vector{Float64};
     reactive_power_voltage_control::Vector{Float64} = Float64[],
+    tap_transformer_control::Vector{Float64} = Float64[],
 )    
     P = real.(power_injection)
     Q = imag.(power_injection)
@@ -92,7 +93,57 @@ function jacobian(
         dV_dV[i, controlled_bus_index] = 1.0
     end
 
-    return [H N dP_dQg; M L dQ_dQg; dV_dA dV_dV dV_dQg]
+    # tap transformer control Jacobian components
+    num_tapvc = length(tap_transformer_control)
+    dP_dTap = zeros(num_buses, num_tapvc)
+    dQ_dTap = zeros(num_buses, num_tapvc)
+    dV_dA_tap = zeros(num_tapvc, num_buses)
+    dV_dV_tap = zeros(num_tapvc, num_buses)
+    dV_dQg_tap = zeros(num_tapvc, num_qgvc)
+    dV_dTap = zeros(num_tapvc, num_tapvc)
+    dV_dTap_qg = zeros(num_qgvc, num_tapvc)
+
+    circuits = power_flow_case.circuits
+    for (i, vbct) in enumerate(power_flow_case.caches.voltage_controlled_by_tap)
+        controlling_circuit_idx = vbct.controlling_circuit_idx
+        controlling_bus_from_index = vbct.controlling_bus_from_idx
+        controlling_bus_to_index = vbct.controlling_bus_to_idx
+        controlled_bus_index = vbct.controlled_bus_idx
+
+        tap = tap_transformer_control[i]
+        resistance = circuits[controlling_circuit_idx].resistance
+        reactance = circuits[controlling_circuit_idx].reactance
+        y = admittance(resistance, reactance)
+        g = real(y)
+        b = imag(y)
+        vk = v[controlling_bus_from_index]
+        vm = v[controlling_bus_to_index]
+        ak = a[controlling_bus_from_index]
+        am = a[controlling_bus_to_index]
+
+        dP_dTap[controlling_bus_from_index, i] =
+            2 * tap * vk^2 * g -
+            vk * vm * g * cos(ak - am) -
+            vk * vm * b * sin(ak - am)
+        dQ_dTap[controlling_bus_from_index, i] =
+            - 2 * tap * vk^2 * b +
+            vk * vm * b * cos(ak - am) -
+            vk * vm * g * sin(ak - am)
+        dP_dTap[controlling_bus_to_index, i] =
+            - vk * vm * g * cos(ak - am) +
+            vk * vm * b * sin(ak - am)
+        dQ_dTap[controlling_bus_to_index, i] =
+            vk * vm * b * cos(ak - am) +
+            vk * vm * g * sin(ak - am)
+        dV_dV_tap[i, controlled_bus_index] = 1.0
+    end
+
+    return [
+        H N dP_dQg dP_dTap;
+        M L dQ_dQg dQ_dTap;
+        dV_dA dV_dV dV_dQg dV_dTap_qg;
+        dV_dA_tap dV_dV_tap dV_dQg_tap dV_dTap;
+    ]
 end
 
 # function active_power_injection(power_flow_case::PowerFlowCase, bus_idx::Int)

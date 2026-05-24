@@ -29,3 +29,15 @@ function reactive_power_control_mismatch(
     end
     return qg_vc .- qd .- qcalc
 end
+
+function voltage_controlled_by_reactive_power_mismatch(
+    power_flow_case::PowerFlowCase,
+    voltages::Vector{Float64},
+)
+    mismatch = zeros(num_controlled_voltages_by_reactive_power(power_flow_case))
+    for (i, vbcq) in enumerate(power_flow_case.caches.voltage_controlled_by_reactive_power)
+        controlled_bus_index = vbcq.controlled_bus_index
+        mismatch[i] = power_flow_case.buses[controlled_bus_index].voltage_magnitude - voltages[controlled_bus_index]
+    end
+    return mismatch
+end

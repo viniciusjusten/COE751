@@ -17,7 +17,7 @@ Base.@kwdef mutable struct Bus
     active_power_generation::Float64 = 0.0 # p.u.
     reactive_power_generation::Float64 = 0.0 # p.u.
     # control
-    controlled_bus::Int = 0
+    controlled_bus::Int = 0 # controlled by reactive power injection
 end
 
 Base.@kwdef mutable struct Circuit
@@ -30,6 +30,8 @@ Base.@kwdef mutable struct Circuit
     shunt_susceptance::Float64 = 0.0 # p.u.
     tap_ratio::Float64 = 1.0
     phase_shift::Float64 = 0.0 # rad
+    # control
+    controlled_bus::Int = 0 # controlled by tap transformer
 end
 
 Base.@kwdef mutable struct VoltageControlledByReactivePower
@@ -37,8 +39,16 @@ Base.@kwdef mutable struct VoltageControlledByReactivePower
     controlled_bus_idx::Int = 0
 end
 
+Base.@kwdef mutable struct VoltageControlledByTap
+    controlling_circuit_idx::Int = 0
+    controlling_bus_from_idx::Int = 0
+    controlling_bus_to_idx::Int = 0
+    controlled_bus_idx::Int = 0
+end
+
 Base.@kwdef mutable struct Caches
     voltage_controlled_by_reactive_power::Vector{VoltageControlledByReactivePower} = VoltageControlledByReactivePower[]
+    voltage_controlled_by_tap::Vector{VoltageControlledByTap} = VoltageControlledByTap[]
 end
 
 Base.@kwdef mutable struct PowerFlowCase
@@ -71,6 +81,27 @@ function load_voltage_controlled_by_reactive_power!(power_flow_case::PowerFlowCa
     return nothing
 end
 
+function load_voltage_controlled_by_tap!(power_flow_case::PowerFlowCase)
+    for circuit in power_flow_case.circuits
+        controlled_bus_idx = circuit.controlled_bus
+        if controlled_bus_idx != 0
+            if !bus_is_pqv(power_flow_case.buses[controlled_bus_idx])
+                error("Only PQV buses can have their voltage controlled by tap transformers. Bus $(power_flow_case.buses[controlled_bus_idx].name) is of type $(power_flow_case.buses[controlled_bus_idx].type) and is controlled by circuit $(circuit.name).")
+            end
+            push!(
+                power_flow_case.caches.voltage_controlled_by_tap,
+                VoltageControlledByTap(
+                    circuit_idx,
+                    circuit.from_bus_idx,
+                    circuit.to_bus_idx,
+                    controlled_bus_idx,
+                ),
+            )
+        end
+    end
+    return nothing
+end
+
 function PowerFlowCase(
     name::String = "",
     base_power::Float64 = 100.0, # MVA
@@ -90,6 +121,7 @@ function PowerFlowCase(
         log_path,
     )
     load_voltage_controlled_by_reactive_power!(pfc)
+    load_voltage_controlled_by_tap!(pfc)
     return pfc
 end
 
