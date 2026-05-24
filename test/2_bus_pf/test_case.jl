@@ -29,7 +29,6 @@ power_flow_case = COE751.PowerFlowCase(
     base_power = 100.0,
     buses = buses,
     circuits = circuits,
-    # log_path = joinpath(@__DIR__, "slides_pt2_ex2_pg_49_v2.solver"),
     tolerance = 1e-6,
     max_iterations = 20,
 )
