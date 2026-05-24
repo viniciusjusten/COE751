@@ -34,7 +34,8 @@ function jacobian(
     admittance::Matrix{ComplexF64},
     power_injection::Vector{ComplexF64},
     voltage_magnitudes::Vector{Float64},
-    voltage_angles::Vector{Float64},
+    voltage_angles::Vector{Float64};
+    reactive_power_voltage_control::Vector{Float64} = Float64[],
 )    
     P = real.(power_injection)
     Q = imag.(power_injection)
@@ -45,6 +46,7 @@ function jacobian(
     v = voltage_magnitudes
     a = voltage_angles
 
+    # regular power flow Jacobian components
     num_buses = length(power_flow_case.buses)
     H = zeros(num_buses, num_buses)
     N = zeros(num_buses, num_buses)
@@ -74,7 +76,23 @@ function jacobian(
         end
     end
 
-    return [H N; M L]
+    # reactive power voltage control Jacobian components
+    num_qgvc = length(reactive_power_voltage_control)
+    dP_dQg = zeros(num_buses, num_qgvc)
+    dQ_dQg = zeros(num_buses, num_qgvc)
+    dV_dA = zeros(num_qgvc, num_buses)
+    dV_dV = zeros(num_qgvc, num_buses)
+    dV_dQg = zeros(num_qgvc, num_qgvc)
+
+    for (i, vbcq) in enumerate(power_flow_case.caches.voltage_controlled_by_reactive_power)
+        controlling_bus_index = vbcq.controlling_bus_index
+        controlled_bus_index = vbcq.controlled_bus_index
+
+        dQ_dQg[controlling_bus_index, i] = -1.0
+        dV_dV[i, controlled_bus_index] = 1.0
+    end
+
+    return [H N dP_dQg; M L dQ_dQg; dV_dA dV_dV dV_dQg]
 end
 
 # function active_power_injection(power_flow_case::PowerFlowCase, bus_idx::Int)
