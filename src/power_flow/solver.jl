@@ -49,6 +49,21 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         Pcalc = real.(Scalc)
         Qcalc = imag.(Scalc)
 
+        # if buses have reactive power limits, check for violations, update bus types, and adjust Qcalc accordingly
+        if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
+            # update bus type and caches
+            reactive_power_limits!(power_flow_case, Qcalc)
+
+            # update Qcalc based on limit violations
+            Qcalc = update_Qcalc(power_flow_case, Qcalc)
+            
+            # update bus type indices for mismatch vector construction
+            pv_indices = findall(bus -> bus_is_pv(bus), power_flow_case.buses)
+            pq_indices = findall(bus -> bus_is_pq(bus), power_flow_case.buses)
+            angle_indices = sort(vcat(p_indices, pv_indices, pq_indices, pqv_indices))
+            voltage_indices = sort(vcat(p_indices, pq_indices))
+        end
+
         # mismatch vectors
         ## regular power flow
         P_mismatch = Pesp - Pcalc
@@ -70,7 +85,8 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         println(log, "  Mismatch: $mismatch")
 
         # check for convergence
-        if maximum(abs.(mismatch)) < tolerance
+        # TODO - check if we need to also check that voltages at buses with reactive power limits satisfy their specified voltage magnitudes
+        if maximum(abs.(mismatch)) < tolerance # && bus_with_reactive_power_limits_satisfies_voltage(power_flow_case, v, tolerance)
             println(log, stdout, "Power flow converged in $iter iterations.")
             close(log)
             return v, a
@@ -98,6 +114,11 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         v[voltage_indices] += update[n_buses .+ voltage_indices]
         qg_vc += update[2 * n_buses .+ (1:n_qg_vc)]
         tap_vc += update[2 * n_buses + n_qg_vc .+ (1:n_tap_vc)]
+
+        # after updating voltages, check if any PQ buses that were previously converted from PV due to reactive power limits can be converted back to PV
+        if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
+            check_if_PQ_buses_can_go_back_to_PV!(power_flow_case, v)
+        end
     end
     
     println(log, stdout, "[ERROR] Power flow did not converge within $max_iterations iterations.")

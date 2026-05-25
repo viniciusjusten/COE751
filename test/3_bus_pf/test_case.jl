@@ -46,7 +46,7 @@ circuits = [
     ),
 ]
 
-power_flow_case = COE751.PowerFlowCase(
+power_flow_case = COE751.build_power_flow_case(
     name = "3-bus system",
     base_power = 100.0,
     buses = buses,
