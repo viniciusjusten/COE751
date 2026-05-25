@@ -16,6 +16,9 @@ Base.@kwdef mutable struct Bus
     reactive_power_load::Float64 = 0.0 # p.u.
     active_power_generation::Float64 = 0.0 # p.u.
     reactive_power_generation::Float64 = 0.0 # p.u.
+    # limits
+    min_reactive_power_injection::Float64 = -Inf # p.u.
+    max_reactive_power_injection::Float64 = Inf # p.u.
     # control
     controlled_bus::Int = 0 # controlled by reactive power injection
 end
@@ -46,9 +49,23 @@ Base.@kwdef mutable struct VoltageControlledByTap
     controlled_bus_idx::Int = 0
 end
 
+@enumx LimitViolation begin
+    NoViolation = 0
+    BelowMinimum = 1
+    AboveMaximum = 2
+end
+
+Base.@kwdef mutable struct LimitedReactivePowerInjection
+    bus_idx::Int = 0
+    min_reactive_power_injection::Float64 = -Inf # p.u.
+    max_reactive_power_injection::Float64 = Inf # p.u.
+    limit_violation::LimitViolation.T = LimitViolation.NoViolation
+end
+
 Base.@kwdef mutable struct Caches
     voltage_controlled_by_reactive_power::Vector{VoltageControlledByReactivePower} = VoltageControlledByReactivePower[]
     voltage_controlled_by_tap::Vector{VoltageControlledByTap} = VoltageControlledByTap[]
+    limited_reactive_power_injection::Vector{LimitedReactivePowerInjection} = LimitedReactivePowerInjection[]
 end
 
 Base.@kwdef mutable struct PowerFlowCase
@@ -63,7 +80,7 @@ Base.@kwdef mutable struct PowerFlowCase
 end
 
 function load_voltage_controlled_by_reactive_power!(power_flow_case::PowerFlowCase)
-    for bus in power_flow_case.buses
+    for (i, bus) in enumerate(power_flow_case.buses)
         controlled_bus_idx = bus.controlled_bus
         if controlled_bus_idx != 0
             if !bus_is_p(bus)
@@ -74,7 +91,10 @@ function load_voltage_controlled_by_reactive_power!(power_flow_case::PowerFlowCa
             end
             push!(
                 power_flow_case.caches.voltage_controlled_by_reactive_power,
-                VoltageControlledByReactivePower(bus_idx, controlled_bus_idx),
+                VoltageControlledByReactivePower(
+                    controlling_bus_idx = i,
+                    controlled_bus_idx = controlled_bus_idx,
+                ),
             )
         end
     end
@@ -82,7 +102,7 @@ function load_voltage_controlled_by_reactive_power!(power_flow_case::PowerFlowCa
 end
 
 function load_voltage_controlled_by_tap!(power_flow_case::PowerFlowCase)
-    for circuit in power_flow_case.circuits
+    for (i, circuit) in enumerate(power_flow_case.circuits)
         controlled_bus_idx = circuit.controlled_bus
         if controlled_bus_idx != 0
             if !bus_is_pqv(power_flow_case.buses[controlled_bus_idx])
@@ -91,10 +111,10 @@ function load_voltage_controlled_by_tap!(power_flow_case::PowerFlowCase)
             push!(
                 power_flow_case.caches.voltage_controlled_by_tap,
                 VoltageControlledByTap(
-                    circuit_idx,
-                    circuit.from_bus_idx,
-                    circuit.to_bus_idx,
-                    controlled_bus_idx,
+                    controlling_circuit_idx = i,
+                    controlling_bus_from_idx = circuit.from_bus_idx,
+                    controlling_bus_to_idx = circuit.to_bus_idx,
+                    controlled_bus_idx = controlled_bus_idx,
                 ),
             )
         end
@@ -102,7 +122,26 @@ function load_voltage_controlled_by_tap!(power_flow_case::PowerFlowCase)
     return nothing
 end
 
-function PowerFlowCase(
+function load_limited_reactive_power!(power_flow_case::PowerFlowCase)
+    for (i, bus) in enumerate(power_flow_case.buses)
+        if bus.min_reactive_power_injection != -Inf || bus.max_reactive_power_injection != Inf
+            if !bus_is_pv(bus)
+                error("Only PV buses can have limits on reactive power injection. Bus $(bus.name) is of type $(bus.type) and has limits on reactive power injection.")
+            end
+            push!(
+                power_flow_case.caches.limited_reactive_power_injection,
+                LimitedReactivePowerInjection(
+                    bus_idx = i,
+                    min_reactive_power_injection = bus.min_reactive_power_injection,
+                    max_reactive_power_injection = bus.max_reactive_power_injection,
+                ),
+            )
+        end
+    end
+    return nothing
+end
+
+function build_power_flow_case(;
     name::String = "",
     base_power::Float64 = 100.0, # MVA
     buses::Vector{Bus} = Bus[],
@@ -119,9 +158,11 @@ function PowerFlowCase(
         max_iterations,
         tolerance,
         log_path,
+        Caches(),
     )
     load_voltage_controlled_by_reactive_power!(pfc)
     load_voltage_controlled_by_tap!(pfc)
+    load_limited_reactive_power!(pfc)
     return pfc
 end
 
