@@ -89,11 +89,11 @@ function jacobian(
     dV_dQg = zeros(num_qgvc, num_qgvc)
 
     for (i, vbcq) in enumerate(power_flow_case.caches.voltage_controlled_by_reactive_power)
-        controlling_bus_index = vbcq.controlling_bus_index
-        controlled_bus_index = vbcq.controlled_bus_index
+        controlling_bus_idx = vbcq.controlling_bus_idx
+        controlled_bus_idx = vbcq.controlled_bus_idx
 
-        dQ_dQg[controlling_bus_index, i] = -1.0
-        dV_dV[i, controlled_bus_index] = 1.0
+        dQ_dQg[controlling_bus_idx, i] = -1.0
+        dV_dV[i, controlled_bus_idx] = 1.0
     end
 
     # tap transformer control Jacobian components
@@ -218,11 +218,11 @@ function specified_power_injection(power_flow_case::PowerFlowCase)
     Q = zeros(length(power_flow_case.buses))
 
     for (i, bus) in enumerate(power_flow_case.buses)
-        if bus_is_pq(bus) || bus_is_pv(bus)
+        if bus_is_pq(bus) || bus_is_pv(bus) || bus_is_p(bus) || bus_is_pqv(bus)
             P[i] = bus.active_power_generation - bus.active_power_load
         end
-        
-        if bus_is_pq(bus)
+
+        if bus_is_pq(bus) || bus_is_pqv(bus)
             Q[i] = bus.reactive_power_generation - bus.reactive_power_load
         end
     end

@@ -26,7 +26,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
 
     # indices for voltage updates
     angle_indices = sort(vcat(p_indices, pv_indices, pq_indices, pqv_indices))
-    voltage_indices = sort(vcat(p_indices, pq_indices))
+    voltage_indices = sort(vcat(p_indices, pq_indices, pqv_indices))
 
     for iter in 1:max_iterations
         println(log, "Iteration $iter")
@@ -61,7 +61,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
             pv_indices = findall(bus -> bus_is_pv(bus), power_flow_case.buses)
             pq_indices = findall(bus -> bus_is_pq(bus), power_flow_case.buses)
             angle_indices = sort(vcat(p_indices, pv_indices, pq_indices, pqv_indices))
-            voltage_indices = sort(vcat(p_indices, pq_indices))
+            voltage_indices = sort(vcat(p_indices, pq_indices, pqv_indices))
         end
 
         # mismatch vectors
@@ -72,10 +72,10 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         Q_mismatch[slack_indices] .= 0.0
         Q_mismatch[pv_indices] .= 0.0
         ## reactive power that controls voltage
-        Qg_vc_mismatch = reactive_power_control_mismatch(power_flow_case, Qcalc, qg_vc)
+        Qg_vc_mismatch = reactive_power_control_mismatch(power_flow_case, Qcalc)
         for (i, vbcq) in enumerate(power_flow_case.caches.voltage_controlled_by_reactive_power)
-            controlling_bus_index = vbcq.controlling_bus_index
-            Q_mismatch[controlling_bus_index] += Qg_vc_mismatch[i]
+            controlling_bus_idx = vbcq.controlling_bus_idx
+            Q_mismatch[controlling_bus_idx] = Qg_vc_mismatch[i]
         end
         vc_qg_mismatch = voltage_controlled_by_reactive_power_mismatch(power_flow_case, v)
         ## tap transformer control
@@ -112,8 +112,12 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         println(log, "  Update: $update")
         a[angle_indices] += update[angle_indices]
         v[voltage_indices] += update[n_buses .+ voltage_indices]
-        qg_vc += update[2 * n_buses .+ (1:n_qg_vc)]
+        delta_qg_vc = update[2 * n_buses .+ (1:n_qg_vc)]
+        qg_vc += delta_qg_vc
         tap_vc += update[2 * n_buses + n_qg_vc .+ (1:n_tap_vc)]
+
+        # update caches
+        update_reactive_injection_that_controls_voltage!(power_flow_case, delta_qg_vc)
 
         # after updating voltages, check if any PQ buses that were previously converted from PV due to reactive power limits can be converted back to PV
         if case_has_any_reactive_power_limit(power_flow_case) && iter > 1

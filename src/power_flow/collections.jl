@@ -41,6 +41,7 @@ end
 Base.@kwdef mutable struct VoltageControlledByReactivePower
     controlling_bus_idx::Int = 0
     controlled_bus_idx::Int = 0
+    reactive_generation::Float64 = 0.0 # p.u.
 end
 
 Base.@kwdef mutable struct VoltageControlledByTap
