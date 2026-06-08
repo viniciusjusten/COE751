@@ -10,11 +10,14 @@ function admittance_matrix(power_flow_case::PowerFlowCase)
         from = circuit.from_bus_idx
         to = circuit.to_bus_idx
         y = admittance(circuit.resistance, circuit.reactance)
-        Y[from, from] += y + circuit.shunt_conductance + im * circuit.shunt_susceptance
+        Y[from, from] += y * circuit.tap_ratio^2 + circuit.shunt_conductance + im * circuit.shunt_susceptance
         Y[to, to] += y + circuit.shunt_conductance + im * circuit.shunt_susceptance
         Y[from, to] -= y * circuit.tap_ratio * exp(im * circuit.phase_shift)
         Y[to, from] -= y * circuit.tap_ratio * exp(-im * circuit.phase_shift)
     end
+    for (i, bus) in enumerate(power_flow_case.buses)
+        Y[i, i] += im * bus.shunt_susceptance
+    end    
     return Y
 end
 
