@@ -49,7 +49,7 @@ buses = [
     COE751.Bus(
         name = "Barra-06--LV",
         type = COE751.Bus_type.P,
-        voltage_magnitude = 1.089,
+        # voltage_magnitude = 1.089,
         active_power_generation = 0.0,
         active_power_load = 0.112,
         reactive_power_load = 0.075,
@@ -67,7 +67,7 @@ buses = [
     COE751.Bus(
         name = "Barra-08--TV",
         type = COE751.Bus_type.P,
-        voltage_magnitude = 0.949,
+        # voltage_magnitude = 0.949,
         active_power_generation = 0.0,
         reactive_power_generation = -0.276,
         active_power_load = 0.0,
