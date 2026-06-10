@@ -25,19 +25,20 @@ function reactive_power_limits!(
     return nothing
 end
 
-function update_Qcalc(
+function update_Q_lim_mismatch(
     power_flow_case::PowerFlowCase,
+    Q_mismatch::Vector{Float64},
     Qcalc::Vector{Float64},
 )
     for limit in power_flow_case.caches.limited_reactive_power_injection
         bus_idx = limit.bus_idx
         if limit.limit_violation == LimitViolation.BelowMinimum
-            Qcalc[bus_idx] = limit.min_reactive_power_injection
+            Q_mismatch[bus_idx] = limit.min_reactive_power_injection - power_flow_case.buses[bus_idx].reactive_power_load - Qcalc[bus_idx]
         elseif limit.limit_violation == LimitViolation.AboveMaximum
-            Qcalc[bus_idx] = limit.max_reactive_power_injection
+            Q_mismatch[bus_idx] = limit.max_reactive_power_injection - power_flow_case.buses[bus_idx].reactive_power_load - Qcalc[bus_idx]
         end
     end
-    return Qcalc
+    return Q_mismatch
 end
 
 function check_if_PQ_buses_can_go_back_to_PV!(

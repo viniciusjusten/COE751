@@ -53,9 +53,6 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
             # update bus type and caches
             reactive_power_limits!(power_flow_case, Qcalc)
-
-            # update Qcalc based on limit violations
-            Qcalc = update_Qcalc(power_flow_case, Qcalc)
             
             # update bus type indices for mismatch vector construction
             pv_indices = findall(bus -> bus_is_pv(bus), power_flow_case.buses)
@@ -80,13 +77,17 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         vc_qg_mismatch = voltage_controlled_by_reactive_power_mismatch(power_flow_case, v)
         ## tap transformer control
         vc_tap_mismatch = voltage_controlled_by_tap_mismatch(power_flow_case, v)
+        ## limit mismatch
+        if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
+            Q_mismatch = update_Q_lim_mismatch(power_flow_case, Q_mismatch, Qcalc)
+        end
         ## total mismatch vector
         mismatch = vcat(P_mismatch, Q_mismatch, vc_qg_mismatch, vc_tap_mismatch)
         println(log, "  Mismatch: $mismatch")
 
         # check for convergence
         # TODO - check if we need to also check that voltages at buses with reactive power limits satisfy their specified voltage magnitudes
-        if maximum(abs.(mismatch)) < tolerance # && bus_with_reactive_power_limits_satisfies_voltage(power_flow_case, v, tolerance)
+        if maximum(abs.(mismatch)) < tolerance && bus_with_reactive_power_limits_satisfies_voltage(power_flow_case, v, tolerance)
             println(log, stdout, "Power flow converged in $iter iterations.")
             close(log)
             return v, a
