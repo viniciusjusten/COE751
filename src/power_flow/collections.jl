@@ -62,6 +62,7 @@ Base.@kwdef mutable struct LimitedReactivePowerInjection
     min_reactive_power_injection::Float64 = -Inf # p.u.
     max_reactive_power_injection::Float64 = Inf # p.u.
     limit_violation::LimitViolation.T = LimitViolation.NoViolation
+    skip_limit_check::Bool = false # do not check for limit violation if PV bus changed from PQ to PV in the last iteration
 end
 
 Base.@kwdef mutable struct Caches

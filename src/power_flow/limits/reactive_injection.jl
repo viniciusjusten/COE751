@@ -12,10 +12,22 @@ function reactive_power_limits!(
 )
     for limit in power_flow_case.caches.limited_reactive_power_injection
         bus_idx = limit.bus_idx
-        if Qcalc[bus_idx] < limit.min_reactive_power_injection
+        Qg = Qcalc[bus_idx] + power_flow_case.buses[bus_idx].reactive_power_load
+        @info("barra $(bus_idx)")
+        @info("Qg: $(Qg)")
+        @info("Limites: [$(limit.min_reactive_power_injection), $(limit.max_reactive_power_injection)]")
+        if limit.skip_limit_check
+            continue
+        end
+        tol = power_flow_case.tolerance
+        Qmin = limit.min_reactive_power_injection
+        Qmax = limit.max_reactive_power_injection
+        if Qg < Qmin - tol || Qg < Qmin + tol
+            @info("  Limit violation: Below minimum")
             limit.limit_violation = LimitViolation.BelowMinimum
             power_flow_case.buses[bus_idx].type = Bus_type.PQ
-        elseif Qcalc[bus_idx] > limit.max_reactive_power_injection
+        elseif Qg > Qmax - tol || Qg > Qmax + tol
+            @info("  Limit violation: Above maximum")
             limit.limit_violation = LimitViolation.AboveMaximum
             power_flow_case.buses[bus_idx].type = Bus_type.PQ
         # else
@@ -47,16 +59,27 @@ function check_if_PQ_buses_can_go_back_to_PV!(
 )
     for limit in power_flow_case.caches.limited_reactive_power_injection
         bus_idx = limit.bus_idx
+        @info("Check de tensão")
+        @info("barra $(bus_idx)")
+        @info("tensão: $(voltage_magnitudes[bus_idx])")
+        @info("tensão especificada: $(power_flow_case.buses[bus_idx].voltage_magnitude))")
+        vcalc = voltage_magnitudes[bus_idx]
+        vesp = power_flow_case.buses[bus_idx].voltage_magnitude
+        tol = power_flow_case.tolerance
         if limit.limit_violation == LimitViolation.BelowMinimum
-            if voltage_magnitudes[bus_idx] < power_flow_case.buses[bus_idx].voltage_magnitude
+            if vcalc < vesp - tol || vcalc < vesp + tol
                 # bus can go back to being PV
                 power_flow_case.buses[bus_idx].type = Bus_type.PV
+                limit.skip_limit_check = true
+                @info("  Bus $(bus_idx) can go back to PV")
             end
         end
         if limit.limit_violation == LimitViolation.AboveMaximum
-            if voltage_magnitudes[bus_idx] > power_flow_case.buses[bus_idx].voltage_magnitude
+            if vcalc > vesp - tol || vcalc > vesp + tol
                 # bus can go back to being PV
                 power_flow_case.buses[bus_idx].type = Bus_type.PV
+                limit.skip_limit_check = true
+                @info("  Bus $(bus_idx) can go back to PV")
             end
         end
     end

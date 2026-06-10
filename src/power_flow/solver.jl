@@ -30,8 +30,9 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
 
     for iter in 1:max_iterations
         println(log, "Iteration $iter")
+        @info("Iteration $iter")
 
-        if iter > 1 && !isempty(tap_vc)
+        if iter > 2 && !isempty(tap_vc)
             # update tap ratios in Ybus based on current tap_vc values
             Ybus = update_tap_transformer_admittances(
                 Ybus,
@@ -50,7 +51,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         Qcalc = imag.(Scalc)
 
         # if buses have reactive power limits, check for violations, update bus types, and adjust Qcalc accordingly
-        if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
+        if case_has_any_reactive_power_limit(power_flow_case) && iter > 2
             # update bus type and caches
             reactive_power_limits!(power_flow_case, Qcalc)
             
@@ -78,7 +79,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         ## tap transformer control
         vc_tap_mismatch = voltage_controlled_by_tap_mismatch(power_flow_case, v)
         ## limit mismatch
-        if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
+        if case_has_any_reactive_power_limit(power_flow_case) && iter > 2
             Q_mismatch = update_Q_lim_mismatch(power_flow_case, Q_mismatch, Qcalc)
         end
         ## total mismatch vector
@@ -121,9 +122,11 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         update_reactive_injection_that_controls_voltage!(power_flow_case, delta_qg_vc)
 
         # after updating voltages, check if any PQ buses that were previously converted from PV due to reactive power limits can be converted back to PV
-        if case_has_any_reactive_power_limit(power_flow_case) && iter > 1
+        if case_has_any_reactive_power_limit(power_flow_case) && iter > 2
             check_if_PQ_buses_can_go_back_to_PV!(power_flow_case, v)
         end
+
+        @info("")
     end
     
     println(log, stdout, "[ERROR] Power flow did not converge within $max_iterations iterations.")
