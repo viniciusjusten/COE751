@@ -18,8 +18,8 @@ function reactive_power_limits!(
         elseif Qcalc[bus_idx] > limit.max_reactive_power_injection
             limit.limit_violation = LimitViolation.AboveMaximum
             power_flow_case.buses[bus_idx].type = Bus_type.PQ
-        else
-            limit.limit_violation = LimitViolation.NoViolation
+        # else
+        #     limit.limit_violation = LimitViolation.NoViolation
         end
     end
     return nothing
