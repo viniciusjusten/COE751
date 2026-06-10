@@ -34,7 +34,7 @@ end
 
 function jacobian(
     power_flow_case::PowerFlowCase,
-    admittance::Matrix{ComplexF64},
+    Ybus::Matrix{ComplexF64},
     power_injection::Vector{ComplexF64},
     voltage_magnitudes::Vector{Float64},
     voltage_angles::Vector{Float64};
@@ -44,8 +44,8 @@ function jacobian(
     P = real.(power_injection)
     Q = imag.(power_injection)
 
-    G = real.(admittance)
-    B = imag.(admittance)
+    G = real.(Ybus)
+    B = imag.(Ybus)
 
     v = voltage_magnitudes
     a = voltage_angles
