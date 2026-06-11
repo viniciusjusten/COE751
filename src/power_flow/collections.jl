@@ -42,6 +42,7 @@ Base.@kwdef mutable struct VoltageControlledByReactivePower
     controlling_bus_idx::Int = 0
     controlled_bus_idx::Int = 0
     reactive_generation::Float64 = 0.0 # p.u.
+    disabled::Bool = false
 end
 
 Base.@kwdef mutable struct VoltageControlledByTap
@@ -63,6 +64,7 @@ Base.@kwdef mutable struct LimitedReactivePowerInjection
     max_reactive_power_injection::Float64 = Inf # p.u.
     limit_violation::LimitViolation.T = LimitViolation.NoViolation
     skip_limit_check::Bool = false # do not check for limit violation if PV bus changed from PQ to PV in the last iteration
+    original_bus_type::Bus_type.T = Bus_type.PV
 end
 
 Base.@kwdef mutable struct Caches
@@ -128,8 +130,8 @@ end
 function load_limited_reactive_power!(power_flow_case::PowerFlowCase)
     for (i, bus) in enumerate(power_flow_case.buses)
         if bus.min_reactive_power_injection != -Inf || bus.max_reactive_power_injection != Inf
-            if !bus_is_pv(bus)
-                error("Only PV buses can have limits on reactive power injection. Bus $(bus.name) is of type $(bus.type) and has limits on reactive power injection.")
+            if !bus_is_pv(bus) && !bus_is_p(bus)
+                error("Only PV or P buses can have limits on reactive power injection. Bus $(bus.name) is of type $(bus.type) and has limits on reactive power injection.")
             end
             push!(
                 power_flow_case.caches.limited_reactive_power_injection,
@@ -137,6 +139,7 @@ function load_limited_reactive_power!(power_flow_case::PowerFlowCase)
                     bus_idx = i,
                     min_reactive_power_injection = bus.min_reactive_power_injection,
                     max_reactive_power_injection = bus.max_reactive_power_injection,
+                    original_bus_type = bus.type,
                 ),
             )
         end

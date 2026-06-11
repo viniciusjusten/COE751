@@ -145,21 +145,38 @@ power_flow_case = COE751.build_power_flow_case(
     max_iterations = 20,
 )
 
-v, a = COE751.solve_power_flow(power_flow_case)
+_v, _a = COE751.solve_power_flow(power_flow_case)
 Ybus = COE751.admittance_matrix(power_flow_case)
-Sinj = COE751.power_injection(v, a, Ybus)
+Sinj = COE751.power_injection(_v, _a, Ybus)
 Pinj = real.(Sinj)
 Qinj = imag.(Sinj)
 
 P = power_flow_case.base_power * Pinj
 Q = power_flow_case.base_power * Qinj
 
-v = round.(v, digits=3)
-a = round.(rad2deg.(a), digits=1)
+v = round.(_v, digits=3)
+a = round.(rad2deg.(_a), digits=1)
 
-println("\n=============== Resultados: IEEE 14 Bus - Caso Base ===============")
-println("Barra | Nome           | V (pu)  | θ (graus) |  P (MW)  | Q (Mvar)")
-println("------|----------------|---------|-----------|----------|----------")
-for (i, bus) in enumerate(power_flow_case.buses)
-    @printf("%5d | %-14s |   %.3f | %8.1f  | %8.3f | %8.3f\n", i, bus.name, v[i], a[i], P[i], Q[i])
+COE751.bus_results(
+    power_flow_case,
+    v,
+    a,
+    P,
+    Q,
+)
+
+summary_path = joinpath(@__DIR__, "res_barra.sum")
+COE751.summary_per_bus(
+    summary_path,
+    power_flow_case,
+    v,
+    a,
+    P,
+    Q,
+)
+
+consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
+if consistent
+    println()
+    println("Dados calculados consistentes com os especificados")
 end

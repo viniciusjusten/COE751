@@ -92,8 +92,12 @@ function jacobian(
         controlling_bus_idx = vbcq.controlling_bus_idx
         controlled_bus_idx = vbcq.controlled_bus_idx
 
-        dQ_dQg[controlling_bus_idx, i] = -1.0
-        dV_dV[i, controlled_bus_idx] = 1.0
+        if vbcq.disabled
+            dV_dQg[i, i] = 1e12
+        else
+            dQ_dQg[controlling_bus_idx, i] = -1.0
+            dV_dV[i, controlled_bus_idx] = 1.0
+        end
     end
 
     # tap transformer control Jacobian components
