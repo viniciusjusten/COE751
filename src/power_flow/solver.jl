@@ -32,7 +32,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         println(log, "Iteration $iter")
         @info("Iteration $iter")
 
-        if iter > 2 && !isempty(tap_vc)
+        if iter > 1 && !isempty(tap_vc)
             # update tap ratios in Ybus based on current tap_vc values
             Ybus = update_tap_transformer_admittances(
                 Ybus,
