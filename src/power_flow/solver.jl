@@ -101,6 +101,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
         if maximum(abs.(mismatch)) < tolerance# && bus_with_reactive_power_limits_satisfies_voltage(power_flow_case, v, tolerance)
             println(log, stdout, "Power flow converged in $iter iterations.")
             close(log)
+            update_tap_ratios_in_circuits!(power_flow_case, tap_vc)
             case_back_to_original_buses!(power_flow_case)
             return v, a
         end
@@ -142,6 +143,7 @@ function solve_power_flow(power_flow_case::PowerFlowCase)
     
     println(log, stdout, "[ERROR] Power flow did not converge within $max_iterations iterations.")
     close(log)
+    update_tap_ratios_in_circuits!(power_flow_case, tap_vc)
     case_back_to_original_buses!(power_flow_case)
     return v, a
 end

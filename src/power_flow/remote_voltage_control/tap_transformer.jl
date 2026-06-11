@@ -1,3 +1,13 @@
+function update_tap_ratios_in_circuits!(
+    power_flow_case::PowerFlowCase,
+    tap_vc::Vector{Float64},
+)
+    for (k, vbct) in enumerate(power_flow_case.caches.voltage_controlled_by_tap)
+        power_flow_case.circuits[vbct.controlling_circuit_idx].tap_ratio = tap_vc[k]
+    end
+    return nothing
+end
+
 function num_controlled_voltages_by_tap(power_flow_case::PowerFlowCase)
     return length(power_flow_case.caches.voltage_controlled_by_tap)
 end
@@ -32,7 +42,7 @@ function update_tap_transformer_admittances(
         circuit_idx = vbct.controlling_circuit_idx
         from_idx = vbct.controlling_bus_from_idx
         to_idx = vbct.controlling_bus_to_idx
-        
+
         previous_tap_ratio = previous_tap[i]
         tap_ratio = tap_vc[i]
 
