@@ -186,7 +186,7 @@ a_expected = [
     -16.0,
 ]
 
-@testset "IEEE 14-bus base case" begin
+@testset "$(power_flow_case.name)" begin
     @test v ≈ v_expected atol=1e-3
     @test a ≈ a_expected atol=1e-3
     @test Pinj[1] ≈ 2.324 atol=1e-3

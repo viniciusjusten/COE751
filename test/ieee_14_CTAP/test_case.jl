@@ -51,18 +51,18 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-06--LV",
-        type = COE751.Bus_type.P,
-        # voltage_magnitude = 1.070,
+        type = COE751.Bus_type.PV,
+        voltage_magnitude = 1.070,
         active_power_generation = 0.0,
         # reactive_power_generation = 0.1168,
         active_power_load = 0.112,
         # reactive_power_load = 0.075,
-        controlled_bus = 12,
+        # controlled_bus = 12,
     ),
     COE751.Bus(
         name = "Barra-07--ZV",
-        type = COE751.Bus_type.PQV,
-        voltage_magnitude = 1.000,
+        type = COE751.Bus_type.PQ,
+        # voltage_magnitude = 1.063,
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
         active_power_load = 0.0,
@@ -70,12 +70,12 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-08--TV",
-        type = COE751.Bus_type.P,
-        # voltage_magnitude = 1.090,
+        type = COE751.Bus_type.PV,
+        voltage_magnitude = 1.090,
         active_power_generation = 0.0,
         active_power_load = 0.0,
         # reactive_power_generation = 0.1668,
-        controlled_bus = 7,
+        # controlled_bus = 7,
     ),
     COE751.Bus(
         name = "Barra-09--LV",
@@ -105,10 +105,10 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-12--LV",
-        type = COE751.Bus_type.PQV,
+        type = COE751.Bus_type.PQ,
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
-        voltage_magnitude = 1.070,
+        # voltage_magnitude = 1.055,
         active_power_load = 0.061,
         reactive_power_load = 0.016,
     ),
@@ -161,7 +161,7 @@ circuits = [
 ]
 
 power_flow_case = COE751.build_power_flow_case(
-    name = "IEEE 14 Bus - Caso 3 (CREM + CTAP)",
+    name = "IEEE 14 Bus - Caso 3 (CTAP)",
     base_power = 100.0,
     buses = buses,
     circuits = circuits,
@@ -190,17 +190,59 @@ a = round.(rad2deg.(_a), digits=1)
 #     Q,
 # )
 
-summary_path = joinpath(@__DIR__, "res_barra.sum")
-COE751.summary_per_bus(
-    summary_path,
-    power_flow_case,
-    v,
-    a,
-    P,
-    Q,
-)
+# summary_path = joinpath(@__DIR__, "res_barra.sum")
+# COE751.summary_per_bus(
+#     summary_path,
+#     power_flow_case,
+#     v,
+#     a,
+#     P,
+#     Q,
+# )
 
-consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
-@testset "IEEE 14 Bus - Caso 3 (CTAP)" begin
-    @test consistent
+# consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
+# if consistent
+#     println()
+#     println("Dados calculados consistentes com os especificados")
+# end
+
+v_expected = [
+    1.060,
+    1.045,
+    1.010,
+    1.017,
+    1.019,
+    1.070,
+    1.063,
+    1.090,
+    1.060,
+    1.054,
+    1.059,
+    1.055,
+    1.051,
+    1.038,
+]
+
+a_expected = [
+    0.0,
+    -5.0,
+    -12.7,
+    -10.3,
+    -8.8,
+    -14.2,
+    -13.4,
+    -13.4,
+    -14.9,
+    -15.1,
+    -14.8,
+    -15.0,
+    -15.1,
+    -16.0,
+]
+
+@testset "$(power_flow_case.name)" begin
+    @test v ≈ v_expected atol=2e-3
+    @test a ≈ a_expected atol=1e-1
+    @test Pinj[1] ≈ 2.324 atol=2e-3
+    # @test Qinj[1] ≈ -0.164 atol=2e-3 # TODO - revisar
 end

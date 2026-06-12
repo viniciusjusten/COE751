@@ -5,7 +5,7 @@ function bus_results(
     P::Vector{Float64},
     Q::Vector{Float64},
 )
-    println("\n=============== Resultados: IEEE 14 Bus - Caso 2 (QLIM em PV, CREM) ===============")
+    println("\n=============== Resultados: $(power_flow_case.name) ===============")
     println("Barra | Nome           | V (pu)  | θ (graus) |  P (MW)  | Q (Mvar)")
     println("------|----------------|---------|-----------|----------|----------")
     for (i, bus) in enumerate(power_flow_case.buses)

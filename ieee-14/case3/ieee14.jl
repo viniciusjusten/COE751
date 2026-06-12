@@ -51,18 +51,18 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-06--LV",
-        type = COE751.Bus_type.P,
-        # voltage_magnitude = 1.070,
+        type = COE751.Bus_type.PV,
+        voltage_magnitude = 1.070,
         active_power_generation = 0.0,
         # reactive_power_generation = 0.1168,
         active_power_load = 0.112,
         # reactive_power_load = 0.075,
-        controlled_bus = 12,
+        # controlled_bus = 12,
     ),
     COE751.Bus(
         name = "Barra-07--ZV",
-        type = COE751.Bus_type.PQV,
-        voltage_magnitude = 1.000,
+        type = COE751.Bus_type.PQ,
+        # voltage_magnitude = 1.063,
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
         active_power_load = 0.0,
@@ -70,12 +70,12 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-08--TV",
-        type = COE751.Bus_type.P,
-        # voltage_magnitude = 1.090,
+        type = COE751.Bus_type.PV,
+        voltage_magnitude = 1.090,
         active_power_generation = 0.0,
         active_power_load = 0.0,
         # reactive_power_generation = 0.1668,
-        controlled_bus = 7,
+        # controlled_bus = 7,
     ),
     COE751.Bus(
         name = "Barra-09--LV",
@@ -105,10 +105,10 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-12--LV",
-        type = COE751.Bus_type.PQV,
+        type = COE751.Bus_type.PQ,
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
-        voltage_magnitude = 1.070,
+        # voltage_magnitude = 1.055,
         active_power_load = 0.061,
         reactive_power_load = 0.016,
     ),
@@ -161,12 +161,12 @@ circuits = [
 ]
 
 power_flow_case = COE751.build_power_flow_case(
-    name = "IEEE 14 Bus - Caso 3 (CREM + CTAP)",
+    name = "IEEE 14 Bus - Caso 3 (CTAP)",
     base_power = 100.0,
     buses = buses,
     circuits = circuits,
     log_path = joinpath(@__DIR__, "ieee14.solver"),
-    tolerance = 1e-3,
+    tolerance = 1e-6,
     max_iterations = 20,
 )
 

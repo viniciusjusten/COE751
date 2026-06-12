@@ -28,9 +28,6 @@ buses = [
         voltage_magnitude = 1.045,
         active_power_generation = 0.400,
         active_power_load = 0.217,
-        reactive_power_load = 0.127,
-        min_reactive_power_injection = -0.4,
-        max_reactive_power_injection = 0.5,
     ),
     COE751.Bus(
         name = "Barra-03--HV",
@@ -38,9 +35,6 @@ buses = [
         voltage_magnitude = 1.010,
         active_power_generation = 0.0,
         active_power_load = 0.942,
-        reactive_power_load = 0.19,
-        min_reactive_power_injection = 0.0,
-        max_reactive_power_injection = 0.4,
     ),
     COE751.Bus(
         name = "Barra-04--HV",
@@ -57,13 +51,11 @@ buses = [
     COE751.Bus(
         name = "Barra-06--LV",
         type = COE751.Bus_type.P,
-        # voltage_magnitude = 1.089,
-        # active_power_generation = 0.0,
-        # active_power_load = 0.112,
-        # reactive_power_load = 0.075,
+        voltage_magnitude = 1.089,
+        active_power_generation = 0.0,
+        active_power_load = 0.112,
+        reactive_power_load = 0.075,
         controlled_bus = 12,
-        # min_reactive_power_injection = -0.06,
-        # max_reactive_power_injection = 0.24,
     ),
     COE751.Bus(
         name = "Barra-07--ZV",
@@ -77,14 +69,12 @@ buses = [
     COE751.Bus(
         name = "Barra-08--TV",
         type = COE751.Bus_type.P,
-        # voltage_magnitude = 0.949,
-        # active_power_generation = 0.0,
-        # reactive_power_generation = -0.276,
-        # active_power_load = 0.0,
-        # reactive_power_load = 0.0,
+        voltage_magnitude = 0.949,
+        active_power_generation = 0.0,
+        reactive_power_generation = -0.276,
+        active_power_load = 0.0,
+        reactive_power_load = 0.0,
         controlled_bus = 7,
-        # min_reactive_power_injection = -0.06,
-        # max_reactive_power_injection = 0.24,
     ),
     COE751.Bus(
         name = "Barra-09--LV",
@@ -205,7 +195,49 @@ a = round.(rad2deg.(_a), digits=1)
 #     Q,
 # )
 
-consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
-@testset "IEEE 14 Bus - Caso 2 Alterado (CREM com QLIM em PV)" begin
-    @test consistent
+# consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
+# if consistent
+#     println()
+#     println("Dados calculados consistentes com os especificados")
+# end
+
+v_expected = [
+    1.060,
+    1.045,
+    1.010,
+    1.006,
+    1.014,
+    1.089,
+    1.000,
+    0.949,
+    1.018,
+    1.023,
+    1.052,
+    1.070,
+    1.061,
+    1.019,
+]
+
+a_expected = [
+    0.0,
+    -5.0,
+    -12.8,
+    -10.1,
+    -8.8,
+    -14.7,
+    -13.1,
+    -13.1,
+    -14.7,
+    -14.9,
+    -14.9,
+    -15.5,
+    -15.5,
+    -16.1,
+]
+
+@testset "$(power_flow_case.name)" begin
+    @test v ≈ v_expected atol=2e-3
+    @test a ≈ a_expected atol=1e-1
+    @test Pinj[1] ≈ 2.331 atol=2e-3
+    @test Qinj[1] ≈ -0.142 atol=2e-3
 end

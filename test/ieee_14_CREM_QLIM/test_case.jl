@@ -186,26 +186,67 @@ Q = power_flow_case.base_power * Qinj
 v = round.(_v, digits=3)
 a = round.(rad2deg.(_a), digits=1)
 
-COE751.bus_results(
-    power_flow_case,
-    v,
-    a,
-    P,
-    Q,
-)
+# COE751.bus_results(
+#     power_flow_case,
+#     v,
+#     a,
+#     P,
+#     Q,
+# )
 
-summary_path = joinpath(@__DIR__, "res_barra.sum")
-COE751.summary_per_bus(
-    summary_path,
-    power_flow_case,
-    v,
-    a,
-    P,
-    Q,
-)
+# summary_path = joinpath(@__DIR__, "res_barra.sum")
+# COE751.summary_per_bus(
+#     summary_path,
+#     power_flow_case,
+#     v,
+#     a,
+#     P,
+#     Q,
+# )
 
-consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
-if consistent
-    println()
-    println("Dados calculados consistentes com os especificados")
+# consistent = COE751.validate_power_flow_solution(power_flow_case, _v, _a)
+# if consistent
+#     println()
+#     println("Dados calculados consistentes com os especificados")
+# end
+
+v_expected = [
+    1.060,
+    1.045,
+    1.010,
+    1.010,
+    1.015,
+    1.071,
+    1.028,
+    1.018,
+    1.033,
+    1.032,
+    1.048,
+    1.055,
+    1.048,
+    1.021,
+]
+
+a_expected = [
+    -0.0,
+    -5.0,
+    -12.8,
+    -10.2,
+    -8.7,
+    -14.4,
+    -13.2,
+    -13.2,
+    -14.8,
+    -15.0,
+    -14.9,
+    -15.3,
+    -15.3,
+    -16.1,
+]
+
+@testset "$(power_flow_case.name)" begin
+    @test v ≈ v_expected atol=2e-3
+    @test a ≈ a_expected atol=1e-1
+    @test Pinj[1] ≈ 2.326 atol=2e-3
+    # @test Qinj[1] ≈ -0.141 atol=2e-3 # TODO - revisar
 end

@@ -1,0 +1,97 @@
+
+============================================================
+Sumário por Barra: IEEE 14 Bus - Caso 1 (CREM)
+============================================================
+
+Barra 01 — Barra-01--HV [Slack]
+  Especificado: V = 1.060 pu  |  θ = 0.0° (referência)
+  Calculado:    V = 1.060 pu  |  θ =   0.000°
+                P_inj =  233.096 MW   |  Q_inj =  -14.159 Mvar  (injeção líquida)
+                Pg    =  233.096 MW   |  Qg    =  -14.159 Mvar  (geração)
+
+Barra 02 — Barra-02--HV [PV]
+  Especificado: V = 1.045 pu
+                P: Pg =   40.000 MW   (geração)  |  Pl =   21.700 MW   (carga)  |  P_inj =   18.300 MW
+                Q:                              |  Ql =    0.000 Mvar (carga)  [Qg calculado]
+  Calculado:    V = 1.045 pu  |  θ =  -5.000°
+                P_inj =   18.309 MW   |  Q_inj =   40.888 Mvar  (injeção líquida)
+                Pg    =   40.009 MW   |  Qg    =   40.888 Mvar  (geração)
+
+Barra 03 — Barra-03--HV [PV]
+  Especificado: V = 1.010 pu
+                P: Pg =    0.000 MW   (geração)  |  Pl =   94.200 MW   (carga)  |  P_inj =  -94.200 MW
+                Q:                              |  Ql =    0.000 Mvar (carga)  [Qg calculado]
+  Calculado:    V = 1.010 pu  |  θ = -12.800°
+                P_inj =  -94.194 MW   |  Q_inj =   13.006 Mvar  (injeção líquida)
+                Pg    =    0.006 MW   |  Qg    =   13.006 Mvar  (geração)
+
+Barra 04 — Barra-04--HV [PQ]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =   47.800 MW   (carga)  |  P_inj =  -47.800 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =   -3.900 Mvar (carga)  |  Q_inj =    3.900 Mvar
+  Calculado:    V = 1.006 pu  |  θ = -10.100°
+                P_inj =  -47.799 MW   |  Q_inj =    3.926 Mvar  (injeção líquida)
+
+Barra 05 — Barra-05--HV [PQ]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =    7.600 MW   (carga)  |  P_inj =   -7.600 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    1.600 Mvar (carga)  |  Q_inj =   -1.600 Mvar
+  Calculado:    V = 1.014 pu  |  θ =  -8.800°
+                P_inj =   -7.559 MW   |  Q_inj =   -1.537 Mvar  (injeção líquida)
+
+Barra 06 — Barra-06--LV [P/CREM — controla remotamente a barra 12 (Barra-12--LV)]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =   11.200 MW   (carga)  |  P_inj =  -11.200 MW
+                Q:                              |  Ql =    7.500 Mvar (carga)  [Qg calculado]
+  Calculado:    V = 1.089 pu  |  θ = -14.700°
+                P_inj =  -11.212 MW   |  Q_inj =   36.046 Mvar  (injeção líquida)
+                Pg    =   -0.012 MW   |  Qg    =   43.546 Mvar  (geração)
+
+Barra 07 — Barra-07--ZV [PQV — tensão controlada pela barra 08 (Barra-08--TV)]
+  Especificado: V = 1.000 pu (controlada pela barra 08 — Barra-08--TV)
+                P: Pg =    0.000 MW   (geração)  |  Pl =    0.000 MW   (carga)  |  P_inj =    0.000 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    0.000 Mvar (carga)  |  Q_inj =    0.000 Mvar
+  Calculado:    V = 1.000 pu  |  θ = -13.100°
+                P_inj =   -0.002 MW   |  Q_inj =    0.002 Mvar  (injeção líquida)
+
+Barra 08 — Barra-08--TV [P/CREM — controla remotamente a barra 07 (Barra-07--ZV)]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =    0.000 MW   (carga)  |  P_inj =    0.000 MW
+  Calculado:    V = 0.949 pu  |  θ = -13.100°
+                P_inj =   -0.000 MW   |  Q_inj =  -27.591 Mvar  (injeção líquida)
+                Pg    =   -0.000 MW   |  Qg    =  -27.591 Mvar  (geração)
+
+Barra 09 — Barra-09--LV [PQ (com shunt)]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =   29.500 MW   (carga)  |  P_inj =  -29.500 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =   16.600 Mvar (carga)  |  Q_inj =  -16.600 Mvar
+                Shunt capacitivo: B = 0.190 pu = 19.0 Mvar (a V = 1 pu)
+  Calculado:    V = 1.018 pu  |  θ = -14.700°
+                P_inj =  -29.501 MW   |  Q_inj =  -16.595 Mvar  (injeção líquida)
+
+Barra 10 — Barra-10--LV [PQ]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =    9.000 MW   (carga)  |  P_inj =   -9.000 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    5.800 Mvar (carga)  |  Q_inj =   -5.800 Mvar
+  Calculado:    V = 1.023 pu  |  θ = -14.900°
+                P_inj =   -9.001 MW   |  Q_inj =   -5.799 Mvar  (injeção líquida)
+
+Barra 11 — Barra-11--LV [PQ]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =    3.500 MW   (carga)  |  P_inj =   -3.500 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    1.800 Mvar (carga)  |  Q_inj =   -1.800 Mvar
+  Calculado:    V = 1.052 pu  |  θ = -14.900°
+                P_inj =   -3.501 MW   |  Q_inj =   -1.800 Mvar  (injeção líquida)
+
+Barra 12 — Barra-12--LV [PQV — tensão controlada pela barra 06 (Barra-06--LV)]
+  Especificado: V = 1.070 pu (controlada pela barra 06 — Barra-06--LV)
+                P: Pg =    0.000 MW   (geração)  |  Pl =    6.100 MW   (carga)  |  P_inj =   -6.100 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    1.600 Mvar (carga)  |  Q_inj =   -1.600 Mvar
+  Calculado:    V = 1.070 pu  |  θ = -15.500°
+                P_inj =   -6.100 MW   |  Q_inj =   -1.599 Mvar  (injeção líquida)
+
+Barra 13 — Barra-13--LV [PQ]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =   13.500 MW   (carga)  |  P_inj =  -13.500 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    5.800 Mvar (carga)  |  Q_inj =   -5.800 Mvar
+  Calculado:    V = 1.061 pu  |  θ = -15.500°
+                P_inj =  -13.500 MW   |  Q_inj =   -5.798 Mvar  (injeção líquida)
+
+Barra 14 — Barra-14--LV [PQ]
+  Especificado: P: Pg =    0.000 MW   (geração)  |  Pl =   14.900 MW   (carga)  |  P_inj =  -14.900 MW
+                Q: Qg =    0.000 Mvar (geração)  |  Ql =    5.000 Mvar (carga)  |  Q_inj =   -5.000 Mvar
+  Calculado:    V = 1.019 pu  |  θ = -16.100°
+                P_inj =  -14.901 MW   |  Q_inj =   -4.998 Mvar  (injeção líquida)
+

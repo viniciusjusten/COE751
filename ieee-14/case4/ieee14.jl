@@ -1,11 +1,11 @@
 # IEEE 14 Bus Test Case - Winter 1962
-# Caso 1: CREM ativo (controle remoto de tensão por injeção reativa)
-# Dados extraídos do arquivo IEEE14_Caso1.pwf (ANAREDE/CEPEL)
+# Caso 3: CREM + CTAP ativos
+#   CREM: barra 6 (tipo P) controla remotamente a tensão da barra 12 (PQV) em 1.070 pu
+#         barra 8 (tipo P) controla remotamente a tensão da barra 7  (PQV) em 1.090 pu
+#   CTAP: transformador T4-9 controla a tensão da barra 9 (PQV) em 1.060 pu
+#         transformador T5-6 controla a tensão da barra 5 (PQV) em 1.020 pu
+# Dados extraídos do arquivo IEEE14_Caso3.pwf (ANAREDE/CEPEL)
 # Potência base: 100 MVA
-#
-# CREM ativo:
-#   Barra 6 (tipo P): controla remotamente a tensão da barra 12 (PQV) em 1.070 pu
-#   Barra 8 (tipo P): controla remotamente a tensão da barra 7 (PQV) em 1.090 pu
 #
 # Shunt de linha (modelo pi):
 #   shunt_susceptance = Bsh_total/2 (pu), pois admittance_matrix soma em CADA extremidade
@@ -14,7 +14,6 @@
 # Shunt de barra 9: Sh = 19 Mvar = 0.19 pu
 
 using Printf
-using COE751
 
 buses = [
     COE751.Bus(
@@ -27,10 +26,8 @@ buses = [
         name = "Barra-02--HV",
         type = COE751.Bus_type.PV,
         voltage_magnitude = 1.045,
-        active_power_generation = 0.400,
+        active_power_generation = 0.40,
         active_power_load = 0.217,
-        min_reactive_power_injection = -0.4,
-        max_reactive_power_injection = 0.5,
     ),
     COE751.Bus(
         name = "Barra-03--HV",
@@ -38,8 +35,6 @@ buses = [
         voltage_magnitude = 1.010,
         active_power_generation = 0.0,
         active_power_load = 0.942,
-        min_reactive_power_injection = 0.0,
-        max_reactive_power_injection = 0.4,
     ),
     COE751.Bus(
         name = "Barra-04--HV",
@@ -49,20 +44,20 @@ buses = [
     ),
     COE751.Bus(
         name = "Barra-05--HV",
-        type = COE751.Bus_type.PQ,
+        type = COE751.Bus_type.PQV,
+        voltage_magnitude = 1.010,
         active_power_load = 0.076,
         reactive_power_load = 0.016,
     ),
     COE751.Bus(
         name = "Barra-06--LV",
         type = COE751.Bus_type.P,
-        voltage_magnitude = 1.070,
-        # active_power_generation = 0.0,
+        # voltage_magnitude = 1.070,
+        active_power_generation = 0.0,
+        # reactive_power_generation = 0.1168,
         active_power_load = 0.112,
-        reactive_power_load = 0.075,
+        # reactive_power_load = 0.075,
         controlled_bus = 12,
-        min_reactive_power_injection = -0.06,
-        max_reactive_power_injection = 0.24,
     ),
     COE751.Bus(
         name = "Barra-07--ZV",
@@ -71,23 +66,21 @@ buses = [
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
         active_power_load = 0.0,
-        #reactive_power_load = 0.0,
+        reactive_power_load = 0.0,
     ),
     COE751.Bus(
         name = "Barra-08--TV",
         type = COE751.Bus_type.P,
-        voltage_magnitude = 1.090,
+        # voltage_magnitude = 1.090,
         active_power_generation = 0.0,
-        # reactive_power_generation = -0.276,
         active_power_load = 0.0,
-        reactive_power_load = 0.0,
+        # reactive_power_generation = 0.1668,
         controlled_bus = 7,
-        min_reactive_power_injection = -0.06,
-        max_reactive_power_injection = 0.24,
     ),
     COE751.Bus(
         name = "Barra-09--LV",
-        type = COE751.Bus_type.PQ,
+        type = COE751.Bus_type.PQV,
+        voltage_magnitude = 1.018,
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
         active_power_load = 0.295,
@@ -113,9 +106,9 @@ buses = [
     COE751.Bus(
         name = "Barra-12--LV",
         type = COE751.Bus_type.PQV,
-        voltage_magnitude = 1.070,
         active_power_generation = 0.0,
         reactive_power_generation = 0.0,
+        voltage_magnitude = 1.070,
         active_power_load = 0.061,
         reactive_power_load = 0.016,
     ),
@@ -148,10 +141,13 @@ circuits = [
     COE751.Circuit(name = "L2-5",   from_bus_idx =  2, to_bus_idx =  5, resistance = 0.05695, reactance = 0.17388, shunt_susceptance = 0.0173),
     COE751.Circuit(name = "L3-4",   from_bus_idx =  3, to_bus_idx =  4, resistance = 0.06701, reactance = 0.17103, shunt_susceptance = 0.0064),
     COE751.Circuit(name = "L4-5",   from_bus_idx =  4, to_bus_idx =  5, resistance = 0.01335, reactance = 0.04211),
-    # Transformadores com tap fixo
+    # Transformadores
+    # T4-7: tap fixo
     COE751.Circuit(name = "T4-7",   from_bus_idx =  4, to_bus_idx =  7, resistance = 0.0, reactance = 0.20912, tap_ratio = 1/0.978),
-    COE751.Circuit(name = "T4-9",   from_bus_idx =  4, to_bus_idx =  9, resistance = 0.0, reactance = 0.55618, tap_ratio = 1/0.969),
-    COE751.Circuit(name = "T5-6",   from_bus_idx =  5, to_bus_idx =  6, resistance = 0.0, reactance = 0.25202, tap_ratio = 1/0.932),
+    # T4-9: CTAP controla barra 9 em 1.060 pu (tap inicial = 1/0.949 do estado convergido)
+    COE751.Circuit(name = "T4-9",   from_bus_idx =  4, to_bus_idx =  9, resistance = 0.0, reactance = 0.55618, tap_ratio = 1/0.949, controlled_bus = 9),
+    # T5-6: CTAP controla barra 5 em 1.020 pu
+    COE751.Circuit(name = "T5-6",   from_bus_idx =  5, to_bus_idx =  6, resistance = 0.0, reactance = 0.25202, tap_ratio = 1/0.932, controlled_bus = 5),
     COE751.Circuit(name = "L6-11",  from_bus_idx =  6, to_bus_idx = 11, resistance = 0.09498, reactance = 0.19890),
     COE751.Circuit(name = "L6-12",  from_bus_idx =  6, to_bus_idx = 12, resistance = 0.12291, reactance = 0.25581),
     COE751.Circuit(name = "L6-13",  from_bus_idx =  6, to_bus_idx = 13, resistance = 0.06615, reactance = 0.13027),
@@ -165,12 +161,12 @@ circuits = [
 ]
 
 power_flow_case = COE751.build_power_flow_case(
-    name = "IEEE 14 Bus - Caso 2 (CREM QLIM)",
+    name = "IEEE 14 Bus - Caso 4 (CREM CTAP)",
     base_power = 100.0,
     buses = buses,
     circuits = circuits,
     log_path = joinpath(@__DIR__, "ieee14.solver"),
-    tolerance = 1e-6,
+    tolerance = 1e-3,
     max_iterations = 20,
 )
 

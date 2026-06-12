@@ -29,4 +29,3 @@ JuliaLocalPreferences.toml
 
 *.log
 *.solver
-*.sum
